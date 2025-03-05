@@ -4,12 +4,14 @@
   pre_tasks:
 
   - name: install updates for Ubuntu
+    tags: always
     ansible.builtin.apt:
        upgrade: dist
        update_cache: yes
     when: ansible_distribution == "Ubuntu"
 
   - name: install updates for Fedroa
+    tags: always
     ansible.builtin.dnf:
        use_backend: dnf
        update_only: yes
@@ -21,6 +23,7 @@
   tasks:
 
   - name: install apache
+    tags: apache,ubuntu
     ansible.builtin.apt:
       name:
         - apache2
@@ -28,7 +31,56 @@
     when: ansible_distribution == "Ubuntu"
 
 
+  - name: install apache for Fedora
+    tags: apache,fedora
+    ansible.builtin.dnf:
+       name: httpd
+       use_backend: dnf
+    when: ansible_distribution == "Fedora"
+
+
+  - name: ensure apache is running
+    tags: apache,ubuntu
+    ansible.builtin.service:
+       name: apache2
+       state: started
+    when: ansible_distribution == "Ubuntu"
+
+  - name: ensure apache is running on Fedora
+    tags: apache,fedora
+    ansible.builtin.service:
+       name: httpd
+       state: started
+    when: ansible_distribution == "Fedora"
+
+
+  - name: change email address 
+    tags: apache,fedora
+    ansible.builtin.lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin adrian@adrian.com
+    when: ansible_distribution == "Fedora"
+    register: httpd
+
+  - name: restart httpd fedora
+    tags: apache,fedora
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
+  - name: copy html
+    tags: apache,ubuntu
+    ansible.builtin.copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
 - hosts: db_servers
+  tags: db,fedora
   become: true
   tasks:
     - name: install mariadb package on db servers
