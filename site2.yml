@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates for Ubuntu
+    tags: always
+    ansible.builtin.apt:
+       upgrade: dist
+       update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install updates for Fedroa
+    tags: always
+    ansible.builtin.dnf:
+       use_backend: dnf
+       update_only: yes
+       update_cache: yes
+    when: ansible_distribution == "Fedora"
+
+- hosts: all
+  become: true
+  roles:
+    - base
+
+- hosts: db_servers
+  become: true
+  roles:
+    - db_servers
+
+- hosts: web_servers
+  become: true
+  roles:
+    - web_servers
+
+
