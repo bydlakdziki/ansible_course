@@ -18,6 +18,27 @@
        update_cache: yes
     when: ansible_distribution == "Fedora"
 
+  - name: create user
+    tags: always
+    ansible.builtin.user:
+      name: AdrianK
+      groups: root
+
+  - name: add sudoers file for AdrianK
+    tags: always
+    ansible.builtin.copy:
+      src: sudoer_AdrianK
+      dest: /etc/sudoers.d/AdrianK
+      owner: root
+      group: root
+      mode: 0440
+
+  - name: add ssh key for AdrianK
+    tags: always
+    ansible.builtin.authorized_key:
+      user: AdrianK
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBZUplFGOAvuC7cWbd4nA/qeNPA40oPg/ZlCO0z+8Za9 adrian@ubuntu-ws"
+
 - hosts: web_servers
   become: true
   tasks:
